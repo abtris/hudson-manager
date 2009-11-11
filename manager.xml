@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="hudson manager" default="Backup" basedir=".">
+
+  <description>
+        Hudson manager @@VERSION@@
+  </description>
+  <!-- Get options from properties file -->
+  <echo message="reading properties from: manager.properties" />  
+  <property file="manager.properties"/>    
+   <!-- Backup script run by: ant -f manager.xml target -->
+   
+   <target name="backupOnlyJobs">
+        <mkdir dir="${hudson.backup}" />
+   
+        <tstamp/>
+        <tar destfile="${hudson.backup}/${hudson.backup.filename}-${DSTAMP}${TSTAMP}.tar.gz" compression="gzip">
+            <fileset dir="${hudson.home}">
+                <include name="**/config.xml"/>
+            </fileset>
+        </tar>            
+   </target>
+       
+   <target name="backup">
+        <mkdir dir="${hudson.backup}" />
+        <!-- Define which files should be removed ( = older than 1 month) -->   
+        <tstamp>   
+            <format property="1_month_ago" pattern="dd/MM/yyyy hh:mm aa" offset="-${hudson.backup.days}" unit="day"/>   
+        </tstamp>   
+           
+        <echo message="Delete files older than ${1_month_ago}"/>   
+        
+        <!-- Clean up any old files -->
+        <exec dir="${hudson.backup}" executable="find">
+            <arg value="${hudson.backup} -name 'backup-*' -mtime +${hudson.backup.days} -exec rm {} \;" />
+        </exec>     
+   
+        <tstamp/>
+        <tar destfile="${hudson.backup}/${hudson.backup.filename}-${DSTAMP}${TSTAMP}.tar.gz" compression="gzip">
+            <fileset dir="${hudson.home}">
+                <include name="**/config.xml"/>
+                <include name="plugins/*.hpi"/>
+                <exclude name="fingerprints/**" />
+                <exclude name="updates/**" />
+                <exclude name="userContent/**" />
+            </fileset>
+        </tar>        
+   </target> 
+
+</project>
